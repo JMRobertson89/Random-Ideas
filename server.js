@@ -1,51 +1,32 @@
+const path = require('path');
 const express = require('express');
-const port = 5000;
+const cors = require('cors');
+require('dotenv').config();
+const port = process.env.PORT;
+const connectDB = require('./config/db');
+
+connectDB();
 
 const app = express();
 
-const ideas = [
-    {
-        id: 1,
-        text: 'A blog that shares current events in tech',
-        tag: 'Technology', 
-        username: 'MachoMan',
-        date: '2024-01-20'
-    },
-    {
-        id: 2,
-        text: 'Hot Pineapple Pizza: A thin crust pizza with pineapple, pepperoni, and hot honey drizzle',
-        tag: 'Food', 
-        username: 'Gandalf',
-        date: '2024-02-9'
-    },
-    {
-        id: 1,
-        text: 'An app that lets users "duckify" anything in their lives by overlaying random duck images, duck sounds, or duck-inspired captions onto photos, videos, or even everyday text messages.',
-        tag: 'Software', 
-        username: 'GeraltOfRivia',
-        date: '2024-03-15'
-    },
-]
+// Static Folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => { 
-    res.json({ message: 'Welcome to the RandomIdeas API'});
+// Body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// cors middleware
+app.use(cors({
+	origin: ['http://localhost:5000', 'http://localhost:3000'],
+	credentials: true
+}));
+
+app.get('/', (req, res) => {
+	res.json({ message: 'Welcome to the RandomIdeas API' });
 });
 
-// Get all ideas
-app.get('/api/ideas', (req, res) => { 
-    res.json({ success: true, data: ideas });
-});
-
-// Get a single idea
-app.get('/api/ideas/:id', (req, res) => { 
-    const idea = ideas.find((idea) => idea.id === +req.params.id);
-
-    if (!idea) {
-        res.status(404).json({ success: false, error: 'Resource not found' })
-    }
-
-    res.json({ success: true, data: idea })
-});
-
+const ideasRouter = require('./routes/ideas');
+app.use('/api/ideas', ideasRouter);
 
 app.listen(port, () => console.log(`Server listening on port ${port}`));
